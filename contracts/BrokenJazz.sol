@@ -12,15 +12,10 @@ contract BrokenJazz is
 ERC721URIStorage,
 Ownable
 {
-    struct ApprovedClaimer {
-        address claimer;
-        string tokenURI;
-    }
-
-    mapping(uint256 => ApprovedClaimer) public approvedClaimers;
+    mapping(uint256 => address) public approvedClaimers;
 
     modifier onlyApprovedClaimer(uint256 tokenId) {
-        require(approvedClaimers[tokenId].claimer == msg.sender, "BrokenJazz: not approved");
+        require(approvedClaimers[tokenId] == msg.sender, "BrokenJazz: not approved");
         _;
     }
 
@@ -28,24 +23,36 @@ Ownable
     ERC721(tokenName, symbol){
     }
 
-    function approveClaimer(address claimer, uint256 tokenId, string memory tokenURI)
+    function approveClaimer(address claimer, uint256 tokenId)
     public
     onlyOwner
     {
-        require(claimer != address(0), "BrokenJazz: address 0");
+        require(claimer != address(0), "BrokenJazz: address 0?");
         require(!_exists(tokenId), "BrokenJazz: token already minted");
-        bytes memory tokenURIBytes = bytes(tokenURI);
-        require(tokenURIBytes.length == 67, "BrokenJazz: invalid tokenURI");
-        approvedClaimers[tokenId] = ApprovedClaimer(claimer, tokenURI);
+        approvedClaimers[tokenId] = claimer;
     }
 
-    function claimToken(uint256 tokenId)
+    function claimToken(uint256 tokenId, string memory tokenURI)
     public
     onlyApprovedClaimer(tokenId)
     returns (uint256)
     {
-        _mint(approvedClaimers[tokenId].claimer, tokenId);
-        _setTokenURI(tokenId, approvedClaimers[tokenId].tokenURI);
+        bytes memory tokenURIBytes = bytes(tokenURI);
+        require(tokenURIBytes.length == 67, "BrokenJazz: invalid tokenURI");
+        _mint(msg.sender, tokenId);
+        _setTokenURI(tokenId, tokenURI);
+        return tokenId;
+    }
+
+    function awardToken(address addr, uint256 tokenId, string memory tokenURI)
+    public
+    onlyOwner
+    returns (uint256)
+    {
+        bytes memory tokenURIBytes = bytes(tokenURI);
+        require(tokenURIBytes.length == 67, "BrokenJazz: invalid tokenURI");
+        _mint(addr, tokenId);
+        _setTokenURI(tokenId, tokenURI);
         return tokenId;
     }
 
