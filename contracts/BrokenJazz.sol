@@ -1,23 +1,26 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+// Author: Francesco Sullo <francesco@sullo.co>
+// BrokenJazz website: https://brokenjazz.cc
+
 contract BrokenJazz is
 ERC721URIStorage,
 Ownable
 {
-
     struct ApprovedClaimer {
         address claimer;
         string tokenURI;
     }
 
-    mapping (uint256 => ApprovedClaimer) private _approvedClaimers;
+    mapping(uint256 => ApprovedClaimer) public approvedClaimers;
 
     modifier onlyApprovedClaimer(uint256 tokenId) {
-        require(_approvedClaimers[tokenId].claimer == msg.sender, "BrokenJazz: Not approved");
+        require(approvedClaimers[tokenId].claimer == msg.sender, "BrokenJazz: not approved");
         _;
     }
 
@@ -29,11 +32,11 @@ Ownable
     public
     onlyOwner
     {
-        require(claimer != address(0));
+        require(claimer != address(0), "BrokenJazz: address 0");
         require(!_exists(tokenId), "BrokenJazz: token already minted");
         bytes memory tokenURIBytes = bytes(tokenURI);
-        require(tokenURIbytes.length == 71);
-        _approvedClaimers[tokenId] = ApprovedClaimer(claimer, tokenURI);
+        require(tokenURIBytes.length == 67, "BrokenJazz: invalid tokenURI");
+        approvedClaimers[tokenId] = ApprovedClaimer(claimer, tokenURI);
     }
 
     function claimToken(uint256 tokenId)
@@ -41,8 +44,8 @@ Ownable
     onlyApprovedClaimer(tokenId)
     returns (uint256)
     {
-        _mint(_approvedClaimers[tokenId].claimer, tokenId);
-        _setTokenURI(tokenId, _approvedClaimers[tokenId].tokenURI);
+        _mint(approvedClaimers[tokenId].claimer, tokenId);
+        _setTokenURI(tokenId, approvedClaimers[tokenId].tokenURI);
         return tokenId;
     }
 
