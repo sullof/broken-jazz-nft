@@ -23,8 +23,8 @@ describe("BrokenJazz", function() {
     const tokenId = 23;
     const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
 
-    await brokenJazz.approveClaimer(addr1.address, tokenId, tokenUri);
-    expect((await brokenJazz.approvedClaimers(tokenId))[0]).to.equal(addr1.address);
+    await brokenJazz.approveClaimer(addr1.address, tokenId);
+    expect((await brokenJazz.approvedClaimers(tokenId))).to.equal(addr1.address);
   });
 
   it("should allow addr1 to claim token #23", async function() {
@@ -34,12 +34,25 @@ describe("BrokenJazz", function() {
     const tokenId = 23;
     const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
 
-    await brokenJazz.approveClaimer(addr1.address, tokenId, tokenUri);
+    await brokenJazz.approveClaimer(addr1.address, tokenId);
 
     expect(await brokenJazz.balanceOf(addr1.address)).to.equal(0);
 
-    await brokenJazz.connect(addr1).claimToken(tokenId);
+    await brokenJazz.connect(addr1).claimToken(tokenId, tokenUri);
 
+    expect(await brokenJazz.balanceOf(addr1.address)).to.equal(1);
+    expect(await brokenJazz.ownerOf(tokenId)).to.equal(addr1.address);
+
+  });
+
+  it("should award addr1 with token #23", async function() {
+
+    const [owner, addr1] = await ethers.getSigners();
+
+    const tokenId = 23;
+    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
+
+    await brokenJazz.awardToken(addr1.address, tokenId, tokenUri);
     expect(await brokenJazz.balanceOf(addr1.address)).to.equal(1);
     expect(await brokenJazz.ownerOf(tokenId)).to.equal(addr1.address);
 
@@ -53,7 +66,7 @@ describe("BrokenJazz", function() {
     const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
 
     try {
-      await brokenJazz.connect(addr1).claimToken(tokenId);
+      await brokenJazz.connect(addr1).claimToken(tokenId, tokenUri);
       assert.isTrue(false);
     } catch(e) {
       assert.isTrue(e.message.includes('BrokenJazz: not approved'));
@@ -69,7 +82,7 @@ describe("BrokenJazz", function() {
     const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
 
     try {
-      await brokenJazz.connect(addr1).approveClaimer(addr1.address, tokenId, tokenUri);
+      await brokenJazz.connect(addr1).approveClaimer(addr1.address, tokenId);
       assert.isTrue(false);
     } catch(e) {
       assert.isTrue(e.message.includes('Ownable: caller is not the owner'));

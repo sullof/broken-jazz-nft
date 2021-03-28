@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-etherscan");
+require("hardhat-gas-reporter");
 
 let env = require('./env.json');
 
@@ -33,12 +34,24 @@ module.exports = {
     hardhat: {
       blockGasLimit: 10000000,
     },
-    goerli: {
+    eth_goerli: {
       url: `https://eth-goerli.alchemyapi.io/v2/${env.goerliAlchemyKey}`,
       accounts: [env.privateKey]
     },
-    mainnet: {
+    eth_mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${env.mainnetAlchemyKey}`,
+      accounts: [env.privateKey]
+    },
+    bsc_testnet: {
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      chainId: 97,
+      gasPrice: 20000000000,
+      accounts: [env.privateKey]
+    },
+    bsc_mainnet: {
+      url: "https://bsc-dataseed.binance.org/",
+      chainId: 56,
+      gasPrice: 20000000000,
       accounts: [env.privateKey]
     }
   },
