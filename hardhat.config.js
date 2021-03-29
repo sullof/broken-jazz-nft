@@ -53,10 +53,23 @@ module.exports = {
       chainId: 56,
       gasPrice: 20000000000,
       accounts: [env.privateKey]
-    }
+    },
+    matic_testnet: {
+      url: "https://rpc-mumbai.matic.today/",
+      chainId: 80001,
+      gasPrice: 20000000000,
+      accounts: [env.privateKey]
+    },
+    matic_mainnet: {
+      url: `https://rpc-mainnet.maticvigil.com/v1/${env.maticvigilKey}`,
+      chainId: 137,
+      gasPrice: 20000000000,
+      accounts: [env.privateKey]
+    },
   },
   etherscan: {
     apiKey: env.etherscanKey
+    // apiKey: env.bscscanKey
   }
 };
 

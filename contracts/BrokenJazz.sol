@@ -14,8 +14,9 @@ Ownable
 {
     mapping(uint256 => address) public approvedClaimers;
 
-    modifier onlyApprovedClaimer(uint256 tokenId) {
-        require(approvedClaimers[tokenId] == msg.sender, "BrokenJazz: not approved");
+    modifier validTokenURI(string memory tokenURI) {
+        bytes memory tokenURIBytes = bytes(tokenURI);
+        require(tokenURIBytes.length == 53, "BrokenJazz: invalid tokenURI");
         _;
     }
 
@@ -34,11 +35,10 @@ Ownable
 
     function claimToken(uint256 tokenId, string memory tokenURI)
     public
-    onlyApprovedClaimer(tokenId)
+    validTokenURI(tokenURI)
     returns (uint256)
     {
-        bytes memory tokenURIBytes = bytes(tokenURI);
-        require(tokenURIBytes.length == 67, "BrokenJazz: invalid tokenURI");
+        require(approvedClaimers[tokenId] == msg.sender, "BrokenJazz: not approved");
         _mint(msg.sender, tokenId);
         _setTokenURI(tokenId, tokenURI);
         return tokenId;
@@ -47,10 +47,9 @@ Ownable
     function awardToken(address addr, uint256 tokenId, string memory tokenURI)
     public
     onlyOwner
+    validTokenURI(tokenURI)
     returns (uint256)
     {
-        bytes memory tokenURIBytes = bytes(tokenURI);
-        require(tokenURIBytes.length == 67, "BrokenJazz: invalid tokenURI");
         _mint(addr, tokenId);
         _setTokenURI(tokenId, tokenURI);
         return tokenId;

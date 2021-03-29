@@ -21,7 +21,7 @@ describe("BrokenJazz", function() {
     const [owner, addr1] = await ethers.getSigners();
 
     const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
+    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz`;
 
     await brokenJazz.approveClaimer(addr1.address, tokenId);
     expect((await brokenJazz.approvedClaimers(tokenId))).to.equal(addr1.address);
@@ -32,7 +32,7 @@ describe("BrokenJazz", function() {
     const [owner, addr1] = await ethers.getSigners();
 
     const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
+    const tokenUri = `ipfs://QmZ5bK8VGc9WAfVzBeCGT1zLneKyV6KUYbRTGFQwHLXCfz`;
 
     await brokenJazz.approveClaimer(addr1.address, tokenId);
 
@@ -50,7 +50,7 @@ describe("BrokenJazz", function() {
     const [owner, addr1] = await ethers.getSigners();
 
     const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
+    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz`;
 
     await brokenJazz.awardToken(addr1.address, tokenId, tokenUri);
     expect(await brokenJazz.balanceOf(addr1.address)).to.equal(1);
@@ -63,7 +63,7 @@ describe("BrokenJazz", function() {
     const [owner, addr1] = await ethers.getSigners();
 
     const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
+    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz`;
 
     try {
       await brokenJazz.connect(addr1).claimToken(tokenId, tokenUri);
@@ -79,13 +79,33 @@ describe("BrokenJazz", function() {
     const [owner, addr1] = await ethers.getSigners();
 
     const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz/metadata.json`;
+    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz`;
 
     try {
       await brokenJazz.connect(addr1).approveClaimer(addr1.address, tokenId);
       assert.isTrue(false);
     } catch(e) {
       assert.isTrue(e.message.includes('Ownable: caller is not the owner'));
+    }
+
+  });
+
+  it("should throw if the tokenURI is not an ipfs link", async function() {
+
+    const [owner, addr1] = await ethers.getSigners();
+
+    const tokenId = 23;
+    const tokenUri = `ipfs://QmZ5bK8VGc9WAfVzBeCGT1zLneKyV6KUYbRTGFQwH`;
+
+    await brokenJazz.approveClaimer(addr1.address, tokenId);
+
+    expect(await brokenJazz.balanceOf(addr1.address)).to.equal(0);
+
+    try {
+      await brokenJazz.connect(addr1).claimToken(tokenId, tokenUri);
+      assert.isTrue(false);
+    } catch(e) {
+      assert.isTrue(e.message.includes('BrokenJazz: invalid tokenURI'));
     }
 
   });
