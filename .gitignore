@@ -61,3 +61,4 @@ artifacts
 #local data
 db
 env.json
+/etherscan

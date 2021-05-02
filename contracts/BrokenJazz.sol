@@ -3,56 +3,63 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Signable.sol";
 
 // Author: Francesco Sullo <francesco@sullo.co>
 // BrokenJazz website: https://brokenjazz.cc
 
 contract BrokenJazz is
 ERC721URIStorage,
-Ownable
+Signable
 {
-    mapping(uint256 => address) public approvedClaimers;
 
-    modifier validTokenURI(string memory tokenURI) {
-        bytes memory tokenURIBytes = bytes(tokenURI);
-        require(tokenURIBytes.length == 53, "BrokenJazz: invalid tokenURI");
-        _;
-    }
+    constructor(
+        address _oracle
+    )
+    ERC721("BrokenJazz", "BKJZ")
+    Signable(_oracle)
+    {}
 
-    constructor(string memory tokenName, string memory symbol)
-    ERC721(tokenName, symbol){
-    }
-
-    function approveClaimer(address claimer, uint256 tokenId)
-    public
-    onlyOwner
+    function claimToken(
+        uint256 _tokenId,
+        string memory _tokenURI,
+        bytes memory _signature
+    ) external
     {
-        require(claimer != address(0), "BrokenJazz: address 0?");
-        require(!_exists(tokenId), "BrokenJazz: token already minted");
-        approvedClaimers[tokenId] = claimer;
+        require(
+            _tokenId > 0 && _tokenId < 55,
+            "Invalid token ID"
+        );
+        require(
+            isSignedByOracle(
+                encodeForSignature(
+                    msg.sender,
+                    _tokenId,
+                    _tokenURI
+                ),
+                _signature
+            ),
+            "Invalid signature"
+        );
+
+        _mint(msg.sender, _tokenId);
+        _setTokenURI(_tokenId, _tokenURI);
     }
 
-    function claimToken(uint256 tokenId, string memory tokenURI)
-    public
-    validTokenURI(tokenURI)
-    returns (uint256)
+    function encodeForSignature(
+        address _address,
+        uint _tokenId,
+        string memory _tokenURI
+    ) public pure
+    returns (bytes32)
     {
-        require(approvedClaimers[tokenId] == msg.sender, "BrokenJazz: not approved");
-        _mint(msg.sender, tokenId);
-        _setTokenURI(tokenId, tokenURI);
-        return tokenId;
-    }
-
-    function awardToken(address addr, uint256 tokenId, string memory tokenURI)
-    public
-    onlyOwner
-    validTokenURI(tokenURI)
-    returns (uint256)
-    {
-        _mint(addr, tokenId);
-        _setTokenURI(tokenId, tokenURI);
-        return tokenId;
+        // EIP-191
+        return keccak256(abi.encodePacked(
+                "\x19\x00",
+                _address,
+                _tokenId,
+                _tokenURI
+            ));
     }
 
 }

@@ -34,6 +34,12 @@ module.exports = {
     hardhat: {
       blockGasLimit: 10000000,
     },
+    localhost: {
+      url: "http://localhost:8545"
+    },
+    ganache: {
+      url: "http://localhost:7545"
+    },
     eth_goerli: {
       url: `https://eth-goerli.alchemyapi.io/v2/${env.goerliAlchemyKey}`,
       accounts: [env.privateKey]
@@ -70,6 +76,9 @@ module.exports = {
   etherscan: {
     apiKey: env.etherscanKey
     // apiKey: env.bscscanKey
+  },
+  gasReporter: {
+    currency: 'USD'
   }
 };
 

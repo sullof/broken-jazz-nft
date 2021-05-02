@@ -24,7 +24,7 @@ async function main() {
 
   // We get the contract to deploy
   const BrokenJazz = await hre.ethers.getContractFactory("BrokenJazz");
-  const brokenJazz = await BrokenJazz.deploy("BrokenJazz", "BKJ");
+  const brokenJazz = await BrokenJazz.deploy("0x4B97426740f536a4a51677A50A5f6d836ec466D6");
 
   await brokenJazz.deployed();
 

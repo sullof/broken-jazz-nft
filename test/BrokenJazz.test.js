@@ -1,113 +1,94 @@
-const { expect, assert } = require("chai");
+const { expect, assert } = require("chai")
 
 describe("BrokenJazz", function() {
 
-  let BrokenJazz;
-  let brokenJazz;
+  let BrokenJazz
+  let brokenJazz
+
+  let addr0 = '0x0000000000000000000000000000000000000000'
+  let owner, oracle, bob, alice
+
+  async function getSignature(address, tokenId, tokenURI) {
+    const hash = await brokenJazz.encodeForSignature(address, tokenId, tokenURI)
+    const signingKey = new ethers.utils.SigningKey('0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d')
+    const signedDigest = signingKey.signDigest(hash)
+    return ethers.utils.joinSignature(signedDigest)
+  }
+
+  async function assertThrowsMessage(promise, message, showError) {
+    try {
+      await promise
+      assert.isTrue(false)
+      console.error('This did not throw: ', message)
+    } catch (e) {
+      if (showError) {
+        console.error('Expected: ', message)
+        console.error(e.message)
+      }
+      assert.isTrue(e.message.indexOf(message) > -1)
+    }
+  }
+
+  before(async function () {
+    const signers = await ethers.getSigners()
+    owner = signers[0]
+    oracle = signers[1]
+    bob = signers[2]
+    alice = signers[3]
+  })
 
   beforeEach(async function () {
-    BrokenJazz = await ethers.getContractFactory("BrokenJazz");
-    brokenJazz = await BrokenJazz.deploy("BrokenJazz", "BKJ");
-    await brokenJazz.deployed();
-  });
+    BrokenJazz = await ethers.getContractFactory("BrokenJazz")
+    brokenJazz = await BrokenJazz.deploy(oracle.address)
+    await brokenJazz.deployed()
+  })
 
   it("should return the brokenJazz name and symbol", async function() {
-    expect(await brokenJazz.name()).to.equal("BrokenJazz");
-    expect(await brokenJazz.symbol()).to.equal("BKJ");
-  });
+    expect(await brokenJazz.name()).to.equal("BrokenJazz")
+    expect(await brokenJazz.symbol()).to.equal("BKJZ")
+    expect(await brokenJazz.oracle()).to.equal(oracle.address)
+  })
 
-  it("should approve addr1 for item #23", async function() {
+  it("should mint token #23", async function() {
 
-    const [owner, addr1] = await ethers.getSigners();
+    const tokenId = 23
+    const tokenUri = 'ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz'
 
-    const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz`;
+    let signature = await getSignature(bob.address, tokenId, tokenUri)
 
-    await brokenJazz.approveClaimer(addr1.address, tokenId);
-    expect((await brokenJazz.approvedClaimers(tokenId))).to.equal(addr1.address);
-  });
+    await expect(brokenJazz.connect(bob).claimToken(tokenId, tokenUri, signature))
+        .to.emit(brokenJazz, 'Transfer')
+        .withArgs(addr0, bob.address, tokenId);
 
-  it("should allow addr1 to claim token #23", async function() {
+  })
 
-    const [owner, addr1] = await ethers.getSigners();
 
-    const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK8VGc9WAfVzBeCGT1zLneKyV6KUYbRTGFQwHLXCfz`;
+  it("should throw if signature is wrong", async function() {
 
-    await brokenJazz.approveClaimer(addr1.address, tokenId);
+    const tokenId = 23
+    const tokenUri = 'ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz'
 
-    expect(await brokenJazz.balanceOf(addr1.address)).to.equal(0);
+    let signature = await getSignature(bob.address, tokenId, tokenUri)
 
-    await brokenJazz.connect(addr1).claimToken(tokenId, tokenUri);
+    await assertThrowsMessage(
+        brokenJazz.connect(bob).claimToken(24, tokenUri, signature),
+        'Invalid signature')
 
-    expect(await brokenJazz.balanceOf(addr1.address)).to.equal(1);
-    expect(await brokenJazz.ownerOf(tokenId)).to.equal(addr1.address);
+    await assertThrowsMessage(
+        brokenJazz.connect(alice).claimToken(tokenId, tokenUri, signature),
+        'Invalid signature')
 
-  });
+    const hash = await brokenJazz.encodeForSignature(bob.address, tokenId, tokenUri)
+    const signingKey = new ethers.utils.SigningKey(
+        // bob private key
+        '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a')
+    const signedDigest = signingKey.signDigest(hash)
+    signature = ethers.utils.joinSignature(signedDigest)
 
-  it("should award addr1 with token #23", async function() {
+    await assertThrowsMessage(
+        brokenJazz.connect(bob).claimToken(tokenId, tokenUri, signature),
+        'Invalid signature')
 
-    const [owner, addr1] = await ethers.getSigners();
+  })
 
-    const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz`;
-
-    await brokenJazz.awardToken(addr1.address, tokenId, tokenUri);
-    expect(await brokenJazz.balanceOf(addr1.address)).to.equal(1);
-    expect(await brokenJazz.ownerOf(tokenId)).to.equal(addr1.address);
-
-  });
-
-  it("should throw if addr1 claims a token without being approved", async function() {
-
-    const [owner, addr1] = await ethers.getSigners();
-
-    const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz`;
-
-    try {
-      await brokenJazz.connect(addr1).claimToken(tokenId, tokenUri);
-      assert.isTrue(false);
-    } catch(e) {
-      assert.isTrue(e.message.includes('BrokenJazz: not approved'));
-    }
-
-  });
-
-  it("should throw if addr1 tries to approve itself", async function() {
-
-    const [owner, addr1] = await ethers.getSigners();
-
-    const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK81zLneKyV6KUYVGc9WAfVzBeCGTbRTGFQwHLXCfz`;
-
-    try {
-      await brokenJazz.connect(addr1).approveClaimer(addr1.address, tokenId);
-      assert.isTrue(false);
-    } catch(e) {
-      assert.isTrue(e.message.includes('Ownable: caller is not the owner'));
-    }
-
-  });
-
-  it("should throw if the tokenURI is not an ipfs link", async function() {
-
-    const [owner, addr1] = await ethers.getSigners();
-
-    const tokenId = 23;
-    const tokenUri = `ipfs://QmZ5bK8VGc9WAfVzBeCGT1zLneKyV6KUYbRTGFQwH`;
-
-    await brokenJazz.approveClaimer(addr1.address, tokenId);
-
-    expect(await brokenJazz.balanceOf(addr1.address)).to.equal(0);
-
-    try {
-      await brokenJazz.connect(addr1).claimToken(tokenId, tokenUri);
-      assert.isTrue(false);
-    } catch(e) {
-      assert.isTrue(e.message.includes('BrokenJazz: invalid tokenURI'));
-    }
-
-  });
-
-});
+})
