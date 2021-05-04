@@ -41,7 +41,7 @@ contract Signable is Ownable {
     function isSignedByOracle(
         bytes32 _hash,
         bytes memory _signature
-    ) internal view
+    ) public view
     returns (bool)
     {
         return oracle == ECDSA.recover(_hash, _signature);
