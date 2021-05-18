@@ -21,6 +21,7 @@
     "hardhat-gas-reporter": "^1.0.4"
   },
   "dependencies": {
+    "@poanet/solidity-flattener": "^3.0.6",
     "ipfs-http-client": "^49.0.4"
   }
 }

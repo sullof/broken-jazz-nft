@@ -40,12 +40,16 @@ module.exports = {
     ganache: {
       url: "http://localhost:7545"
     },
+    eth_rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${env.infuraApiKey}`,
+      accounts: [env.privateKey]
+    },
     eth_goerli: {
-      url: `https://eth-goerli.alchemyapi.io/v2/${env.goerliAlchemyKey}`,
+      url: `https://goerli.infura.io/v3/${env.infuraApiKey}`,
       accounts: [env.privateKey]
     },
     eth_mainnet: {
-      url: `https://eth-mainnet.alchemyapi.io/v2/${env.mainnetAlchemyKey}`,
+      url: `https://mainnet.infura.io/v3/${env.infuraApiKey}`,
       accounts: [env.privateKey]
     },
     bsc_testnet: {
